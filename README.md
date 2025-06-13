@@ -14,16 +14,6 @@ This project utilizes the VS Code API and the tools within it to parse through t
 - The default project key format of a ticket/issue [provided by JIRA](https://confluence.atlassian.com/adminjiraserver/changing-the-project-key-format-938847081.html) is ABC-1234 (two or more letters, a dash, followed by numerical values). Users can specify custom project key formats in regex in the .env file of the project, as `JIRA_OPENER_KEY_FORMAT`.
 
 
-## Known Issues
-
-## Release Notes
-
-### 1.0.0
-
-### 1.0.1
-
-### 1.1.0
-
 ---
 
 **Enjoy!**
