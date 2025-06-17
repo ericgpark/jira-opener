@@ -10,7 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -20,7 +20,7 @@
       "properties": {
         "jiraOpener.hostUrl": {
           "type": "string",
-          "default": "https://example.atlassian.net/",
+          "default": "https://example.atlassian.net",
           "description": "The URL of the JIRA host to use when opening the issue in the browser"
         },
         "jiraOpener.projectKeyFormat": {
