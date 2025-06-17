@@ -16,9 +16,18 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
-  const keyRegExp = new RegExp(projectKeyFormat, 'g');
+  let keyRegExp: RegExp;
+  try {
+    keyRegExp = new RegExp(projectKeyFormat, 'g');
+  } catch (e) {
+    console.warn('JIRA Opener: The project key format provided is not a valid regular expression. Please check your configuration in the extension settings.');
+    return;
+  }
 
+  // Select all file types
   const selector: vscode.DocumentSelector = { scheme: 'file' };
+
+  // Create a document link provider which handles the link creation
   const provider: vscode.DocumentLinkProvider = {
     provideDocumentLinks(doc: vscode.TextDocument): vscode.ProviderResult<vscode.DocumentLink[]> {
       const commentTypes = [ '/', '{', '*', '(', '#', '<', '>', '-', ';', '\'', '"', '%', '.', '!' ];
