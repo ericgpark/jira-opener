@@ -10,8 +10,8 @@ This project utilizes the VS Code API and the tools within it to parse through t
 
 ## Requirements
 
-- The JIRA host must be provided as `JIRA_OPENER_HOST` in the .env file of the project using this extension.
-- The default project key format of a ticket/issue [provided by JIRA](https://confluence.atlassian.com/adminjiraserver/changing-the-project-key-format-938847081.html) is ABC-1234 (two or more letters, a dash, followed by numerical values). Users can specify custom project key formats in regex in the .env file of the project, as `JIRA_OPENER_KEY_FORMAT`.
+- The JIRA host must be provided in the extension settings. This is set to `https://example.atlassian.net` by default.
+- The default project key format of a ticket/issue [provided by JIRA](https://confluence.atlassian.com/adminjiraserver/changing-the-project-key-format-938847081.html) is ABC-1234 (two or more letters, a dash, followed by numerical values). Users can specify custom project key formats in regex in the extension settings.
 
 
 ---
