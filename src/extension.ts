@@ -1,25 +1,77 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+
+let outputChannel: vscode.OutputChannel;
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  // Save the host URL and the project key format from the extension settings
+  const config = vscode.workspace.getConfiguration('jiraOpener');
+  const host: string = config.get('hostUrl') ?? '';
+  const projectKeyFormat: string = config.get('projectKeyFormat') ?? '';
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "jira-opener" is now active!');
+  if (!host.length) {
+    console.warn('JIRA Opener: JIRA host is not valid. Please check the extension settings.');
+    return;
+  } else if (!projectKeyFormat.length) {
+    console.warn('JIRA Opener: Project key format is not valid. Please check the extension settings.');
+    return;
+  }
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('jira-opener.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello VS Code!');
-	});
+  const keyRegExp = new RegExp(projectKeyFormat);
 
-	context.subscriptions.push(disposable);
+	console.log('JIRA Opener: Detecting for JIRA project keys...');
+
+  const detectProjectKeys = () => {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+      const textLines = editor.document.getText().split('\n');
+
+      const commentTypes = [
+        '/',
+        '{',
+        '*',
+        '(',
+        '#',
+        '<',
+        '>',
+        '-',
+        ';',
+        '\'',
+        '"',
+        '%',
+        '.',
+        '!',
+      ];
+
+      const comments = textLines.filter((line) => { // Filter for lines of code that begin with these characters
+        return commentTypes.includes(line.trim()[0]);
+      });
+
+      comments.forEach(comment => {
+        console.log(comment);
+        console.log(keyRegExp);
+        console.log(comment.match(keyRegExp));
+      });
+    }
+  }
+
+  const outputChannelLanguageId = 'jira-opener-language';
+
+  outputChannel = vscode.window.createOutputChannel(
+    'jira-opener',
+    outputChannelLanguageId,
+  );
+  const documentLinkProviderDisposable = vscode.languages.registerDocumentLinkProvider(
+    { language: outputChannelLanguageId },
+    {
+      provideDocumentLinks: (doc) => {
+        
+      }
+    }
+  );
+
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(detectProjectKeys));
 }
 
 // This method is called when your extension is deactivated
