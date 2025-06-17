@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
 
-let outputChannel: vscode.OutputChannel;
-
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -18,60 +16,40 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
-  const keyRegExp = new RegExp(projectKeyFormat);
+  const keyRegExp = new RegExp(projectKeyFormat, 'g');
 
-	console.log('JIRA Opener: Detecting for JIRA project keys...');
+  const selector: vscode.DocumentSelector = { scheme: 'file' };
+  const provider: vscode.DocumentLinkProvider = {
+    provideDocumentLinks(doc: vscode.TextDocument): vscode.ProviderResult<vscode.DocumentLink[]> {
+      const commentTypes = [ '/', '{', '*', '(', '#', '<', '>', '-', ';', '\'', '"', '%', '.', '!' ];
+      const links: vscode.DocumentLink[] = [];
+      const textLines = doc.getText().split('\n');
 
-  const detectProjectKeys = () => {
-    const editor = vscode.window.activeTextEditor;
-    if (editor) {
-      const textLines = editor.document.getText().split('\n');
+      textLines.forEach((line, lineIndex) => {
+        if (!commentTypes.includes(line.trim()[0])) { // Ignore non-comments
+          return;
+        }
+        const matches = line.matchAll(keyRegExp);
+        for (const match of matches) {
+          if (match.index !== undefined) {
+            const startPos = new vscode.Position(lineIndex, match.index);
+            const endPos = new vscode.Position(lineIndex, match.index + match[0].length);
+            const range = new vscode.Range(startPos, endPos);
+            const uri = vscode.Uri.parse(`${host}/browse/${match[0]}`);
+            const link = new vscode.DocumentLink(range, uri);
 
-      const commentTypes = [
-        '/',
-        '{',
-        '*',
-        '(',
-        '#',
-        '<',
-        '>',
-        '-',
-        ';',
-        '\'',
-        '"',
-        '%',
-        '.',
-        '!',
-      ];
-
-      const comments = textLines.filter((line) => { // Filter for lines of code that begin with these characters
-        return commentTypes.includes(line.trim()[0]);
+            links.push(link);
+          }
+        }
       });
 
-      comments.forEach(comment => {
-        console.log(comment);
-        console.log(keyRegExp);
-        console.log(comment.match(keyRegExp));
-      });
+      return links;
     }
-  }
+  };
 
-  const outputChannelLanguageId = 'jira-opener-language';
+  const documentLinkProviderDisposable = vscode.languages.registerDocumentLinkProvider(selector, provider);
 
-  outputChannel = vscode.window.createOutputChannel(
-    'jira-opener',
-    outputChannelLanguageId,
-  );
-  const documentLinkProviderDisposable = vscode.languages.registerDocumentLinkProvider(
-    { language: outputChannelLanguageId },
-    {
-      provideDocumentLinks: (doc) => {
-        
-      }
-    }
-  );
-
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(detectProjectKeys));
+  context.subscriptions.push(documentLinkProviderDisposable);
 }
 
 // This method is called when your extension is deactivated
