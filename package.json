@@ -20,12 +20,12 @@
       "properties": {
         "jiraOpener.hostUrl": {
           "type": "string",
-          "default": "ericpark.atlassian.net",
+          "default": "https://example.atlassian.net/",
           "description": "The URL of the JIRA host to use when opening the issue in the browser"
         },
         "jiraOpener.projectKeyFormat": {
           "type": "string",
-          "default": "/[A-Z][A-Z]+[-][\\d]+/g",
+          "default": "[A-Z][A-Z]+[-][\\d]+",
           "description": "The regular expression used to identify the project key format (change this if your JIRA setup uses a custom project key format)"
         }
       }
