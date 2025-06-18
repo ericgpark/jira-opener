@@ -1,5 +1,35 @@
 import * as vscode from 'vscode';
 
+export function createJiraDocumentLinkProvider(hostUrl: string, keyRegExp: RegExp): vscode.DocumentLinkProvider {
+  return {
+    provideDocumentLinks(doc: vscode.TextDocument): vscode.ProviderResult<vscode.DocumentLink[]> {
+      const commentTypes = [ '/', '{', '*', '(', '#', '<', '>', '-', ';', '\'', '"', '%', '.', '!' ];
+      const links: vscode.DocumentLink[] = [];
+      const textLines = doc.getText().split('\n');
+
+      textLines.forEach((line, lineIndex) => {
+        if (!commentTypes.includes(line.trim()[0])) { // Ignore non-comments
+          return;
+        }
+        const matches = line.matchAll(keyRegExp);
+        for (const match of matches) {
+          if (match.index !== undefined) {
+            const startPos = new vscode.Position(lineIndex, match.index);
+            const endPos = new vscode.Position(lineIndex, match.index + match[0].length);
+            const range = new vscode.Range(startPos, endPos);
+            const uri = vscode.Uri.parse(`${hostUrl}/browse/${match[0]}`);
+            const link = new vscode.DocumentLink(range, uri);
+
+            links.push(link);
+          }
+        }
+      });
+
+      return links;
+    }
+  };
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext, logger: Console = console) {
@@ -29,33 +59,7 @@ export async function activate(context: vscode.ExtensionContext, logger: Console
   const selector: vscode.DocumentSelector = { scheme: 'file' };
 
   // Create a document link provider which handles the link creation
-  const provider: vscode.DocumentLinkProvider = {
-    provideDocumentLinks(doc: vscode.TextDocument): vscode.ProviderResult<vscode.DocumentLink[]> {
-      const commentTypes = [ '/', '{', '*', '(', '#', '<', '>', '-', ';', '\'', '"', '%', '.', '!' ];
-      const links: vscode.DocumentLink[] = [];
-      const textLines = doc.getText().split('\n');
-
-      textLines.forEach((line, lineIndex) => {
-        if (!commentTypes.includes(line.trim()[0])) { // Ignore non-comments
-          return;
-        }
-        const matches = line.matchAll(keyRegExp);
-        for (const match of matches) {
-          if (match.index !== undefined) {
-            const startPos = new vscode.Position(lineIndex, match.index);
-            const endPos = new vscode.Position(lineIndex, match.index + match[0].length);
-            const range = new vscode.Range(startPos, endPos);
-            const uri = vscode.Uri.parse(`${hostUrl}/browse/${match[0]}`);
-            const link = new vscode.DocumentLink(range, uri);
-
-            links.push(link);
-          }
-        }
-      });
-
-      return links;
-    }
-  };
+  const provider: vscode.DocumentLinkProvider = createJiraDocumentLinkProvider(hostUrl, keyRegExp);
 
   const documentLinkProviderDisposable = vscode.languages.registerDocumentLinkProvider(selector, provider);
 
