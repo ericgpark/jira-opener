@@ -2,17 +2,18 @@ import * as vscode from 'vscode';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext, logger: Console = console) {
   // Save the host URL and the project key format from the extension settings
   const config = vscode.workspace.getConfiguration('jiraOpener');
-  const host: string = config.get('hostUrl') ?? '';
+  const hostUrl: string = config.get('hostUrl') ?? '';
   const projectKeyFormat: string = config.get('projectKeyFormat') ?? '';
 
-  if (!host.length) {
-    console.warn('JIRA Opener: JIRA host is not valid. Please check the extension settings.');
+  if (!hostUrl || !isValidUrl(hostUrl)) {
+    logger.warn('JIRA Opener: JIRA host is not valid. Please check the extension settings.');
+    logger.warn(`Provided host URL: ${hostUrl}`);
     return;
   } else if (!projectKeyFormat.length) {
-    console.warn('JIRA Opener: Project key format is not valid. Please check the extension settings.');
+    logger.warn('JIRA Opener: Project key format is not valid. Please check the extension settings.');
     return;
   }
 
@@ -20,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
   try {
     keyRegExp = new RegExp(projectKeyFormat, 'g');
   } catch (e) {
-    console.warn('JIRA Opener: The project key format provided is not a valid regular expression. Please check your configuration in the extension settings.');
+    logger.warn('JIRA Opener: The project key format provided is not a valid regular expression. Please check your configuration in the extension settings.');
     return;
   }
 
@@ -44,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
             const startPos = new vscode.Position(lineIndex, match.index);
             const endPos = new vscode.Position(lineIndex, match.index + match[0].length);
             const range = new vscode.Range(startPos, endPos);
-            const uri = vscode.Uri.parse(`${host}/browse/${match[0]}`);
+            const uri = vscode.Uri.parse(`${hostUrl}/browse/${match[0]}`);
             const link = new vscode.DocumentLink(range, uri);
 
             links.push(link);
@@ -63,3 +64,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
+
+function isValidUrl(urlString: string) {
+  try {
+    new URL(urlString);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
