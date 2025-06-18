@@ -1,6 +1,8 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as extension from '../extension';
+import { createJiraDocumentLinkProvider } from '../extension';
+import * as path from 'path';
 
 suite('Extension Test Suite', () => {
   suiteTeardown(() => {
@@ -82,5 +84,31 @@ suite('Extension Test Suite', () => {
     (vscode.languages as any).registerDocumentLinkProvider = originalRegister;
 
     assert.ok(registered, 'Should register DocumentLinkProvider');
+  });
+
+  test('Should generate JIRA links in the editor', async () => {
+    const hostUrl = 'https://your-domain.atlassian.net';
+    // Get the absolute path to index.js in your test workspace
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+    assert.ok(workspaceFolder, 'Workspace folder should be defined');
+    console.log('workspaceFolder', workspaceFolder);
+    const filePath = path.join(workspaceFolder, 'src/index.js');
+
+    // Open the document using the absolute path
+    const doc = await vscode.workspace.openTextDocument(filePath);
+
+    const provider = createJiraDocumentLinkProvider(hostUrl, /[A-Z]+-\d+/g);
+
+    const links = await provider.provideDocumentLinks!(doc, {} as any) ?? [];
+
+    assert.ok(links.length === 3, 'Should provide three links');
+    links.forEach((link) => {
+      if (!link.target?.authority) {
+        assert.fail('Link target or authority is undefined');
+      }
+      assert.ok(hostUrl.includes(link.target.authority), 'Link target should contain the host URL');
+      assert.ok(link.target.path.startsWith('/browse/'), 'Link target path should start with /browse/');
+      assert.ok(/\/browse\/[A-Z]+-\d+/.test(link.target.path), 'Link target path should match the issue key pattern');
+    });
   });
 });
