@@ -1,3 +1,4 @@
 {
-    "jiraOpener.hostUrl": ""
+    "jiraOpener.hostUrl": "https://your-domain.atlassian.net",
+    "jiraOpener.projectKeyFormat": "[A-Z]+-\\d+"
 }
