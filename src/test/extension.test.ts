@@ -55,7 +55,9 @@ suite('Extension Test Suite', () => {
     let warned = false;
     const mockLogger = {
       warn: (msg: string) => {
-        if (msg === 'JIRA Opener: The project key format provided is not a valid regular expression. Please check your configuration in the extension settings.') warned = true;
+        if (msg === 'JIRA Opener: The project key format provided is not a valid regular expression. Please check your configuration in the extension settings.') {
+          warned = true;
+        }
       },
     };
     await extension.activate({ subscriptions: [] } as any, mockLogger as any);
